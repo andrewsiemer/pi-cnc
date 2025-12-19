@@ -1,0 +1,6 @@
+[submodule "cncjs"]
+	path = cncjs
+	url = https://github.com/andrewsiemer/cncjs
+[submodule "tinyweb"]
+	path = tinyweb
+	url = https://github.com/cncjs/cncjs-pendant-tinyweb
