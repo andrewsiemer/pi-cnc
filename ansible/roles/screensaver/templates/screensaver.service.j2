@@ -9,8 +9,10 @@ User={{ pi_user }}
 Group={{ pi_user }}
 Environment=DISPLAY=:0
 Environment=XAUTHORITY={{ pi_home }}/.Xauthority
+# Give X11/desktop time to fully initialize before starting
+ExecStartPre=/bin/sleep 30
 ExecStart={{ pi_home }}/screensaver-watcher.sh
-Restart=on-failure
+Restart=always
 RestartSec=10
 
 [Install]

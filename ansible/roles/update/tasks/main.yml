@@ -75,4 +75,3 @@
   become_user: "{{ pi_user }}"
   environment:
     HOME: "{{ pi_home }}"
-
