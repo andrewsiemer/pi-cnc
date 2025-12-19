@@ -8,6 +8,7 @@ IGNORE_NEXT_UNBLANK=0
 # Ensure we're outputting to the local display
 export DISPLAY=:0
 export XAUTHORITY="{{ pi_home }}/.Xauthority"
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 
 process() {
     while read input; do

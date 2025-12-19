@@ -2,6 +2,7 @@
 # User configuration
 pi_user: pi
 pi_home: /home/pi
+pi_uid: 1000
 
 # Repository configuration
 repo_url: https://github.com/andrewsiemer/pi-cnc.git
