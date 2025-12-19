@@ -1,38 +1,89 @@
 #!/bin/bash
 # Pi-CNC Screensaver Watcher
 # Monitors xscreensaver and plays video when screen blanks
+# Monitors /dev/input directly since VLC grabs X11 input
 
 VIDEO_PATH="{{ screensaver_video }}"
-IGNORE_NEXT_UNBLANK=0
 
 # Ensure we're outputting to the local display
 export DISPLAY=:0
 export XAUTHORITY="{{ pi_home }}/.Xauthority"
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 
+log() {
+    echo "[$(date '+%H:%M:%S')] $1"
+}
+
+stop_video() {
+    killall vlc 2>/dev/null
+    # Kill any lingering input monitors
+    pkill -f "cat /dev/input" 2>/dev/null
+}
+
+start_video() {
+    log "Starting video screensaver"
+    
+    # Deactivate xscreensaver's blank screen
+    xscreensaver-command -deactivate 2>/dev/null
+    sleep 0.5
+    
+    # Start VLC
+    cvlc --fullscreen --loop --no-video-title-show --quiet "$VIDEO_PATH" &
+    local vlc_pid=$!
+    log "VLC started with PID $vlc_pid"
+    
+    # Signal file for input detection
+    local signal="/tmp/ss-input-$$"
+    rm -f "$signal"
+    
+    # Start input monitor in background
+    (
+        # Try to read from any input device
+        for dev in /dev/input/event*; do
+            [ -r "$dev" ] && cat "$dev" 2>/dev/null &
+        done | head -c1 >/dev/null
+        touch "$signal"
+        log "Input detected"
+    ) &
+    local monitor_pid=$!
+    
+    # Loop while VLC is running
+    while kill -0 "$vlc_pid" 2>/dev/null; do
+        # Check for input
+        if [ -f "$signal" ]; then
+            log "Stopping video due to input"
+            rm -f "$signal"
+            stop_video
+            xscreensaver-command -deactivate 2>/dev/null
+            return
+        fi
+        
+        # Keep xscreensaver from re-blanking
+        xscreensaver-command -deactivate 2>/dev/null
+        sleep 1
+    done
+    
+    # Cleanup
+    kill "$monitor_pid" 2>/dev/null
+    pkill -P "$monitor_pid" 2>/dev/null
+    rm -f "$signal"
+}
+
 process() {
     while read input; do
+        log "Event: $input"
         case "$input" in
             UNBLANK*)
-                if [ $IGNORE_NEXT_UNBLANK -eq 1 ]; then
-                    # This UNBLANK was triggered by our deactivate command, ignore it
-                    IGNORE_NEXT_UNBLANK=0
-                else
-                    # User activity - stop the video
-                    killall vlc 2>/dev/null
-                fi
+                stop_video
                 ;;
             BLANK*)
-                # Flag to ignore the UNBLANK that our deactivate will trigger
-                IGNORE_NEXT_UNBLANK=1
-                # Deactivate xscreensaver blank screen so video is visible
-                xscreensaver-command -deactivate 2>/dev/null
-                # Start VLC in fullscreen loop mode
-                cvlc --fullscreen --loop --no-video-title-show --quiet "$VIDEO_PATH" &
+                start_video &
                 ;;
         esac
     done
 }
 
-/usr/bin/xscreensaver-command -watch | process
+trap 'stop_video; pkill -P $$; exit 0' SIGTERM SIGINT
 
+log "Screensaver watcher starting"
+/usr/bin/xscreensaver-command -watch | process

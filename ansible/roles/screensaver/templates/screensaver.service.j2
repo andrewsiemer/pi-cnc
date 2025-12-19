@@ -7,13 +7,14 @@ Wants=graphical.target
 Type=simple
 User={{ pi_user }}
 Group={{ pi_user }}
-# Environment variables are set in the script itself
+Environment=DISPLAY=:0
+Environment=XAUTHORITY={{ pi_home }}/.Xauthority
+Environment=XDG_RUNTIME_DIR=/run/user/1000
 # Give X11/desktop time to fully initialize before starting
-ExecStartPre=/bin/sleep 30
+ExecStartPre=/bin/sleep 10
 ExecStart={{ pi_home }}/screensaver-watcher.sh
 Restart=always
 RestartSec=10
 
 [Install]
 WantedBy=graphical.target
-

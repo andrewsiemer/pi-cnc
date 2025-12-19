@@ -1,5 +1,5 @@
 ---
-# Screensaver setup with xscreensaver and video playback
+# Screensaver setup with xscreensaver and video playback via watcher script
 
 - name: Install screensaver packages
   apt:
@@ -8,7 +8,11 @@
       - vlc
     state: present
 
-# Note: omxplayer is deprecated on newer Pi OS, VLC is used as fallback
+- name: Add pi user to input group for direct input monitoring
+  user:
+    name: "{{ pi_user }}"
+    groups: input
+    append: yes
 
 - name: Configure xscreensaver
   template:
@@ -39,4 +43,3 @@
     state: started
     daemon_reload: yes
   ignore_errors: yes
-

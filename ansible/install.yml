@@ -10,8 +10,8 @@
   become: true
 
   roles:
-    - common
-    - nodejs
-    - cncjs
+    # - common
+    # - nodejs
+    # - cncjs
     - screensaver
-    - kiosk
+    # - kiosk
