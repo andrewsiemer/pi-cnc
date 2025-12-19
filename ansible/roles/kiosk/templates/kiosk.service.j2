@@ -1,0 +1,21 @@
+[Unit]
+Description=Pi-CNC Chromium Kiosk
+After=graphical.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ pi_user }}
+Group={{ pi_user }}
+Environment=DISPLAY=:0
+Environment=XAUTHORITY={{ pi_home }}/.Xauthority
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+ExecStartPre=/bin/sleep 10
+ExecStart={{ pi_home }}/kiosk.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=graphical.target
+

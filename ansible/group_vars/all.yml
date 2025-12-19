@@ -1,0 +1,26 @@
+---
+# User configuration
+pi_user: pi
+pi_home: /home/pi
+
+# Repository configuration
+repo_url: https://github.com/andrewsiemer/pi-cnc.git
+repo_dest: "{{ pi_home }}/pi-cnc"
+cncjs_dir: "{{ repo_dest }}/cncjs"
+tinyweb_dir: "{{ repo_dest }}/tinyweb/src"
+screensaver_video: "{{ repo_dest }}/screensaver/screensaver.m4v"
+watch_dir: "{{ pi_home }}/watch"
+
+# CNCjs configuration
+cncjs_port: 8000
+cncjs_bin: "{{ cncjs_dir }}/bin/cncjs"
+
+# Node.js version (LTS)
+nodejs_version: "20"
+
+# Screensaver settings
+screensaver_timeout_minutes: 5
+
+# Display settings (adjust for your display)
+display_width: 800
+display_height: 480

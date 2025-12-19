@@ -1,0 +1,55 @@
+---
+# Common system setup tasks
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+  when: upgrade_packages | default(true)
+
+- name: Install base dependencies
+  apt:
+    name:
+      - git
+      - curl
+      - wget
+      - build-essential
+      - python3-pip
+      - unclutter
+      - xdotool
+      - x11-xserver-utils
+    state: present
+
+- name: Add pi user to dialout group for serial access
+  user:
+    name: "{{ pi_user }}"
+    groups: dialout
+    append: yes
+
+- name: Add pi user to tty group
+  user:
+    name: "{{ pi_user }}"
+    groups: tty
+    append: yes
+
+- name: Disable screen blanking in boot config
+  lineinfile:
+    path: /boot/config.txt
+    line: "{{ item }}"
+    create: yes
+  loop:
+    - "# Disable screen blanking"
+    - "hdmi_blanking=0"
+  ignore_errors: yes
+
+- name: Configure autologin for console
+  lineinfile:
+    path: /etc/lightdm/lightdm.conf
+    regexp: "^#?autologin-user="
+    line: "autologin-user={{ pi_user }}"
+    insertafter: '^\[Seat:\*\]'
+  ignore_errors: yes

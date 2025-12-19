@@ -1,0 +1,24 @@
+module.exports = {
+  apps: [{
+    name: 'cncjs',
+    script: '{{ cncjs_bin }}',
+    args: [
+      '--port', '{{ cncjs_port }}',
+      '-m', '/tinyweb:{{ tinyweb_dir }}',
+      '--watch-directory', '{{ watch_dir }}'
+    ],
+    cwd: '{{ cncjs_dir }}',
+    env: {
+      NODE_ENV: 'production'
+    },
+    watch: false,
+    max_memory_restart: '500M',
+    error_file: '{{ pi_home }}/.pm2/logs/cncjs-error.log',
+    out_file: '{{ pi_home }}/.pm2/logs/cncjs-out.log',
+    merge_logs: true,
+    time: true,
+    autorestart: true,
+    restart_delay: 5000
+  }]
+};
+

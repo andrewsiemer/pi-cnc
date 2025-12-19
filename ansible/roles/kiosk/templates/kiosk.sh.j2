@@ -1,0 +1,57 @@
+#!/bin/bash
+# Pi-CNC Kiosk Mode Startup Script
+
+# Disable screen blanking and power management
+xset s noblank
+xset s off
+xset -dpms
+
+# Hide the mouse cursor when idle
+unclutter -idle 0 -root &
+
+# Wait for CNCjs to be available
+echo "Waiting for CNCjs to start..."
+until curl -s http://localhost:{{ cncjs_port }} > /dev/null 2>&1; do
+    sleep 2
+done
+echo "CNCjs is ready!"
+
+# Clear any Chromium crash flags (for both default and kiosk profiles)
+for CHROMIUM_PREFS in "{{ pi_home }}/.config/chromium/Default/Preferences" "{{ pi_home }}/.config/chromium-kiosk/Default/Preferences"; do
+    if [ -f "$CHROMIUM_PREFS" ]; then
+        sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' "$CHROMIUM_PREFS" 2>/dev/null
+        sed -i 's/"exit_type":"Crashed"/"exit_type":"Normal"/' "$CHROMIUM_PREFS" 2>/dev/null
+    fi
+done
+
+# Start xscreensaver daemon
+xscreensaver -no-splash &
+
+# Find chromium binary (different names on different Pi OS versions)
+if command -v chromium-browser &> /dev/null; then
+    CHROMIUM_BIN="chromium-browser"
+elif command -v chromium &> /dev/null; then
+    CHROMIUM_BIN="chromium"
+else
+    echo "ERROR: Chromium not found!"
+    exit 1
+fi
+
+# Start Chromium in kiosk mode
+# Using a persistent user data directory to preserve cookies/sessions across reboots
+$CHROMIUM_BIN \
+    --noerrdialogs \
+    --disable-infobars \
+    --disable-session-crashed-bubble \
+    --disable-component-update \
+    --check-for-update-interval=31536000 \
+    --kiosk \
+    --start-fullscreen \
+    --user-data-dir="{{ pi_home }}/.config/chromium-kiosk" \
+    --app=http://localhost:{{ cncjs_port }}/tinyweb &
+
+# Keep script running
+while true; do
+    sleep 60
+done
+

@@ -1,0 +1,42 @@
+---
+# Screensaver setup with xscreensaver and video playback
+
+- name: Install screensaver packages
+  apt:
+    name:
+      - xscreensaver
+      - vlc
+    state: present
+
+# Note: omxplayer is deprecated on newer Pi OS, VLC is used as fallback
+
+- name: Configure xscreensaver
+  template:
+    src: xscreensaver.j2
+    dest: "{{ pi_home }}/.xscreensaver"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
+
+- name: Create screensaver watcher script
+  template:
+    src: screensaver-watcher.sh.j2
+    dest: "{{ pi_home }}/screensaver-watcher.sh"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0755"
+
+- name: Create systemd screensaver service
+  template:
+    src: screensaver.service.j2
+    dest: /etc/systemd/system/screensaver-watcher.service
+    mode: "0644"
+
+- name: Enable and start screensaver watcher service
+  systemd:
+    name: screensaver-watcher
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  ignore_errors: yes
+

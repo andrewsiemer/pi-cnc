@@ -1,0 +1,18 @@
+[Unit]
+Description=Pi-CNC Screensaver Watcher
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User={{ pi_user }}
+Group={{ pi_user }}
+Environment=DISPLAY=:0
+Environment=XAUTHORITY={{ pi_home }}/.Xauthority
+ExecStart={{ pi_home }}/screensaver-watcher.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=graphical.target
+

@@ -1,0 +1,10 @@
+---
+# Pi-CNC Update Playbook
+# Pulls latest changes, updates submodules, rebuilds and redeploys CNCjs
+
+- name: Update and Redeploy Pi-CNC
+  hosts: pi_cnc
+  become: true
+
+  roles:
+    - update

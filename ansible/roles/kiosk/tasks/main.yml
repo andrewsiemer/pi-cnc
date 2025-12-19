@@ -1,0 +1,115 @@
+---
+# Chromium kiosk mode setup
+
+- name: Check if chromium is available
+  shell: apt-cache show chromium 2>/dev/null | head -1
+  register: chromium_available
+  changed_when: false
+  failed_when: false
+
+- name: Check if chromium-browser is available
+  shell: apt-cache show chromium-browser 2>/dev/null | head -1
+  register: chromium_browser_available
+  changed_when: false
+  failed_when: false
+
+- name: Install Chromium browser (new package name)
+  apt:
+    name: chromium
+    state: present
+  when: chromium_available.rc == 0
+
+- name: Install Chromium browser (legacy package name)
+  apt:
+    name: chromium-browser
+    state: present
+  when: chromium_available.rc != 0 and chromium_browser_available.rc == 0
+
+- name: Create kiosk startup script
+  template:
+    src: kiosk.sh.j2
+    dest: "{{ pi_home }}/kiosk.sh"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0755"
+
+# LXDE autostart (older Pi OS)
+- name: Create LXDE autostart directory
+  file:
+    path: "{{ pi_home }}/.config/lxsession/LXDE-pi"
+    state: directory
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0755"
+
+- name: Configure LXDE autostart for kiosk mode
+  template:
+    src: autostart.j2
+    dest: "{{ pi_home }}/.config/lxsession/LXDE-pi/autostart"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
+
+# Wayfire/labwc autostart (newer Pi OS with Wayland)
+- name: Create wayfire autostart directory
+  file:
+    path: "{{ pi_home }}/.config/wayfire.ini.d"
+    state: directory
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0755"
+  ignore_errors: yes
+
+- name: Create labwc autostart directory
+  file:
+    path: "{{ pi_home }}/.config/labwc"
+    state: directory
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0755"
+  ignore_errors: yes
+
+- name: Configure labwc autostart for kiosk mode
+  template:
+    src: labwc-autostart.j2
+    dest: "{{ pi_home }}/.config/labwc/autostart"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0755"
+  ignore_errors: yes
+
+# XDG autostart (works across desktop environments)
+- name: Create XDG autostart directory
+  file:
+    path: "{{ pi_home }}/.config/autostart"
+    state: directory
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0755"
+
+- name: Create XDG autostart entry for kiosk
+  template:
+    src: kiosk.desktop.j2
+    dest: "{{ pi_home }}/.config/autostart/kiosk.desktop"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
+
+# Systemd service as fallback
+- name: Create systemd kiosk service
+  template:
+    src: kiosk.service.j2
+    dest: /etc/systemd/system/kiosk.service
+    mode: "0644"
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Enable and start kiosk service
+  systemd:
+    name: kiosk
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  ignore_errors: yes

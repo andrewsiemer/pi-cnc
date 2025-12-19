@@ -1,0 +1,119 @@
+---
+# CNCjs repository clone, build, and PM2 configuration
+
+- name: Create watch directory
+  file:
+    path: "{{ watch_dir }}"
+    state: directory
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0755"
+
+- name: Check if repository already exists and is valid
+  stat:
+    path: "{{ repo_dest }}/.git/config"
+  register: repo_valid
+
+- name: Remove broken/empty repository directory
+  file:
+    path: "{{ repo_dest }}"
+    state: absent
+  when: not repo_valid.stat.exists
+
+- name: Clone pi-cnc repository with submodules
+  shell: |
+    git clone --recursive {{ repo_url }} {{ repo_dest }}
+  become: true
+  become_user: "{{ pi_user }}"
+  args:
+    creates: "{{ repo_dest }}/.git/config"
+
+- name: Update existing repository
+  shell: |
+    git fetch --all
+    git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+    git submodule update --init --recursive
+  args:
+    chdir: "{{ repo_dest }}"
+  become: true
+  become_user: "{{ pi_user }}"
+  when: repo_valid.stat.exists
+
+- name: Verify cncjs submodule exists
+  stat:
+    path: "{{ cncjs_dir }}/package.json"
+  register: cncjs_exists
+  failed_when: not cncjs_exists.stat.exists
+
+- name: Ensure correct ownership of repository
+  file:
+    path: "{{ repo_dest }}"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    recurse: yes
+
+- name: Install CNCjs dependencies with Yarn
+  command: yarn install
+  args:
+    chdir: "{{ cncjs_dir }}"
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+
+- name: Build CNCjs for production
+  command: yarn run build-prod
+  args:
+    chdir: "{{ cncjs_dir }}"
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+    NODE_ENV: production
+
+- name: Make cncjs bin executable
+  file:
+    path: "{{ cncjs_bin }}"
+    mode: "0755"
+
+- name: Create PM2 ecosystem config
+  template:
+    src: ecosystem.config.js.j2
+    dest: "{{ pi_home }}/ecosystem.config.js"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
+
+- name: Stop existing PM2 processes
+  command: pm2 delete all
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+  ignore_errors: yes
+
+- name: Start CNCjs with PM2
+  command: pm2 start {{ pi_home }}/ecosystem.config.js
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+
+- name: Save PM2 process list
+  command: pm2 save
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+
+- name: Setup PM2 startup script
+  shell: |
+    env PATH=$PATH:/usr/bin pm2 startup systemd -u {{ pi_user }} --hp {{ pi_home }} | grep -E "^sudo" | head -1
+  register: pm2_startup_cmd
+  changed_when: false
+  ignore_errors: yes
+
+- name: Run PM2 startup command
+  shell: "{{ pm2_startup_cmd.stdout }}"
+  when: pm2_startup_cmd.stdout is defined and pm2_startup_cmd.stdout | trim | length > 0 and pm2_startup_cmd.stdout is match("^sudo.*")
+  ignore_errors: yes

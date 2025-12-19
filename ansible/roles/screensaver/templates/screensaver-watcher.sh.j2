@@ -1,0 +1,37 @@
+#!/bin/bash
+# Pi-CNC Screensaver Watcher
+# Monitors xscreensaver and plays video when screen blanks
+
+VIDEO_PATH="{{ screensaver_video }}"
+IGNORE_NEXT_UNBLANK=0
+
+# Ensure we're outputting to the local display
+export DISPLAY=:0
+export XAUTHORITY="{{ pi_home }}/.Xauthority"
+
+process() {
+    while read input; do
+        case "$input" in
+            UNBLANK*)
+                if [ $IGNORE_NEXT_UNBLANK -eq 1 ]; then
+                    # This UNBLANK was triggered by our deactivate command, ignore it
+                    IGNORE_NEXT_UNBLANK=0
+                else
+                    # User activity - stop the video
+                    killall vlc 2>/dev/null
+                fi
+                ;;
+            BLANK*)
+                # Flag to ignore the UNBLANK that our deactivate will trigger
+                IGNORE_NEXT_UNBLANK=1
+                # Deactivate xscreensaver blank screen so video is visible
+                xscreensaver-command -deactivate 2>/dev/null
+                # Start VLC in fullscreen loop mode
+                cvlc --fullscreen --loop --no-video-title-show --quiet "$VIDEO_PATH" &
+                ;;
+        esac
+    done
+}
+
+/usr/bin/xscreensaver-command -watch | process
+

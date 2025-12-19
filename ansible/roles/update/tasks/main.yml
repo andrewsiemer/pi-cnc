@@ -1,0 +1,78 @@
+---
+# Update role: Pull latest changes and update submodules
+
+- name: Verify repository exists
+  stat:
+    path: "{{ repo_dest }}/.git/config"
+  register: repo_exists
+  failed_when: not repo_exists.stat.exists
+
+- name: Pull latest changes from repository
+  shell: |
+    git fetch --all
+    git pull origin $(git rev-parse --abbrev-ref HEAD)
+  args:
+    chdir: "{{ repo_dest }}"
+  become: true
+  become_user: "{{ pi_user }}"
+  register: git_pull
+  changed_when: "'Already up to date' not in git_pull.stdout"
+
+- name: Update submodules with remote tracking
+  shell: |
+    git submodule update --init --recursive --remote
+  args:
+    chdir: "{{ repo_dest }}"
+  become: true
+  become_user: "{{ pi_user }}"
+  register: submodule_update
+
+- name: Display git changes
+  debug:
+    msg: |
+      Git pull output: {{ git_pull.stdout }}
+      Submodule update output: {{ submodule_update.stdout | default('No output') }}
+
+- name: Install CNCjs dependencies with Yarn
+  command: yarn install
+  args:
+    chdir: "{{ cncjs_dir }}"
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+
+- name: Build CNCjs for production
+  command: yarn run build-prod
+  args:
+    chdir: "{{ cncjs_dir }}"
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+    NODE_ENV: production
+
+- name: Restart CNCjs with PM2
+  command: pm2 restart cncjs
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+  register: pm2_restart
+  ignore_errors: yes
+
+- name: Start CNCjs if restart failed (process not running)
+  command: pm2 start {{ pi_home }}/ecosystem.config.js
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+  when: pm2_restart.rc != 0
+
+- name: Save PM2 process list
+  command: pm2 save
+  become: true
+  become_user: "{{ pi_user }}"
+  environment:
+    HOME: "{{ pi_home }}"
+
