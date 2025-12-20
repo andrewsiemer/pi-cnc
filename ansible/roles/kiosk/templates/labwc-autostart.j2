@@ -1,9 +1,8 @@
 #!/bin/bash
-# Pi-CNC Kiosk autostart for labwc (Wayland)
+# Siemer CNC Kiosk autostart for labwc (Wayland)
 
 # Disable screen blanking
 wlr-randr --output HDMI-A-1 --on 2>/dev/null
 
 # Start the kiosk
 {{ pi_home }}/kiosk.sh &
-

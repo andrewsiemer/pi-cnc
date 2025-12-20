@@ -1,4 +1,4 @@
-# Pi-CNC
+# Siemer CNC
 
 Turn a Raspberry Pi into a dedicated CNC controller kiosk with [CNCjs](https://github.com/cncjs/cncjs).
 
@@ -24,8 +24,8 @@ Turn a Raspberry Pi into a dedicated CNC controller kiosk with [CNCjs](https://g
 
 ```bash
 # Clone this repo
-git clone --recursive https://github.com/andrewsiemer/pi-cnc.git
-cd pi-cnc
+git clone --recursive https://github.com/andrewsiemer/siemer-cnc.git
+cd siemer-cnc
 
 # Configure your Pi's hostname/IP in the inventory
 nano ansible/inventory.ini
@@ -43,7 +43,7 @@ See [ansible/README.md](ansible/README.md) for detailed setup instructions.
 ## Project Structure
 
 ```
-pi-cnc/
+siemer-cnc/
 ├── ansible/          # Automated Pi setup playbook
 ├── cncjs/            # CNCjs submodule
 ├── tinyweb/          # TinyWeb pendant interface

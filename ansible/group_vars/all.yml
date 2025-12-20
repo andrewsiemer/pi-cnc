@@ -4,15 +4,15 @@ pi_user: pi
 pi_home: /home/pi
 
 # Repository configuration
-repo_url: https://github.com/andrewsiemer/pi-cnc.git
-repo_dest: "{{ pi_home }}/pi-cnc"
+repo_url: https://github.com/andrewsiemer/siemer-cnc.git
+repo_dest: "{{ pi_home }}/siemer-cnc"
 cncjs_dir: "{{ repo_dest }}/cncjs"
 tinyweb_dir: "{{ repo_dest }}/tinyweb/src"
 screensaver_video: "{{ repo_dest }}/screensaver/screensaver.m4v"
 watch_dir: "{{ pi_home }}/watch"
 
 # CNCjs configuration
-cncjs_port: 80
+cncjs_port: 8000
 cncjs_bin: "{{ cncjs_dir }}/bin/cncjs"
 
 # Node.js version (LTS)

@@ -1,26 +1,17 @@
 ---
-# Screensaver setup with xscreensaver and video playback via watcher script
+# Video screensaver - simple idle detector, no xscreensaver needed
 
-- name: Install screensaver packages
+- name: Install video player
   apt:
     name:
-      - xscreensaver
       - vlc
     state: present
 
-- name: Add pi user to input group for direct input monitoring
+- name: Add pi user to input group for input monitoring
   user:
     name: "{{ pi_user }}"
     groups: input
     append: yes
-
-- name: Configure xscreensaver
-  template:
-    src: xscreensaver.j2
-    dest: "{{ pi_home }}/.xscreensaver"
-    owner: "{{ pi_user }}"
-    group: "{{ pi_user }}"
-    mode: "0644"
 
 - name: Create screensaver watcher script
   template:

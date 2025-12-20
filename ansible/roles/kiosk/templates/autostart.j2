@@ -1,17 +1,10 @@
-# Pi-CNC LXDE Autostart Configuration
+# Siemer CNC LXDE Autostart Configuration
 # This file is loaded when the LXDE desktop starts
 
-# Disable screensaver and power management (handled by our scripts)
+# Disable screensaver and power management (we handle idle detection ourselves)
 @xset s noblank
 @xset s off
 @xset -dpms
 
-# Start xscreensaver daemon for our custom screensaver
-@xscreensaver -no-splash
-
-# Start the screensaver watcher (plays video on blank)
-@{{ pi_home }}/screensaver-watcher.sh
-
 # Start the kiosk browser
 @{{ pi_home }}/kiosk.sh
-

@@ -1,8 +1,8 @@
 ---
-# Pi-CNC Update Playbook
+# Siemer CNC Update Playbook
 # Pulls latest changes, updates submodules, rebuilds and redeploys CNCjs
 
-- name: Update and Redeploy Pi-CNC
+- name: Update and Redeploy Siemer CNC
   hosts: pi_cnc
   become: true
 

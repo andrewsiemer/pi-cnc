@@ -1,4 +1,4 @@
-# Pi-CNC Ansible Playbook
+# Siemer CNC Ansible Playbook
 
 Automated setup for Raspberry Pi as a CNC controller kiosk using CNCjs.
 

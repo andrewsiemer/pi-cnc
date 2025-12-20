@@ -1,17 +1,17 @@
 ---
-# Pi-CNC Ansible Playbook
+# Siemer CNC Ansible Playbook
 # Sets up a Raspberry Pi as a CNC controller kiosk with:
 # - CNCjs web interface
 # - Chromium kiosk mode
 # - Screensaver with custom video
 
-- name: Configure Raspberry Pi for Pi-CNC
+- name: Configure Raspberry Pi for Siemer CNC
   hosts: pi_cnc
   become: true
 
   roles:
-    # - common
-    # - nodejs
-    # - cncjs
+    - common
+    - nodejs
+    - cncjs
     - screensaver
-    # - kiosk
+    - kiosk

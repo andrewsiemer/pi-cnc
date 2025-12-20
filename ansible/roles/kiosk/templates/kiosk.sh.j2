@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pi-CNC Kiosk Mode Startup Script
+# Siemer CNC Kiosk Mode Startup Script
 
 # Disable screen blanking and power management
 xset s noblank
@@ -23,9 +23,6 @@ for CHROMIUM_PREFS in "{{ pi_home }}/.config/chromium/Default/Preferences" "{{ p
         sed -i 's/"exit_type":"Crashed"/"exit_type":"Normal"/' "$CHROMIUM_PREFS" 2>/dev/null
     fi
 done
-
-# Start xscreensaver daemon
-xscreensaver -no-splash &
 
 # Find chromium binary (different names on different Pi OS versions)
 if command -v chromium-browser &> /dev/null; then

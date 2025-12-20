@@ -20,7 +20,7 @@
     state: absent
   when: not repo_valid.stat.exists
 
-- name: Clone pi-cnc repository with submodules
+- name: Clone siemer-cnc repository with submodules
   shell: |
     git clone --recursive {{ repo_url }} {{ repo_dest }}
   become: true
